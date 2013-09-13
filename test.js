@@ -1,42 +1,55 @@
-var app = require('http').createServer(handler)
-  , io = require('socket.io').listen(app)
-
-app.listen(80);
-
-function handler (req, res) {
-  fs.readFile(__dirname + '/index.html',
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading index.html');
-    }
-
-    res.writeHead(200);
-    res.end(data);
-  });
-}
-
-io.sockets.on('connection', function (socket) {
-  socket.emit('drone', { hello: 'world' });
-});
-
-
+var express = require('express');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io').listen(server);
 var arDrone = require('ar-drone');
-var client = arDrone.createClient();
 var fs = require('fs');
 
-//client.takeoff();
+var port = 3000;
+server.listen(port);
+console.log("Server listening on :" + port);
 
+app.use(express.static('static'));
+
+app.get('/', function(req, res) {
+  res.sendfile(__dirname + "/index.html");
+});
+
+var client = arDrone.createClient();
 client.config('general:navdata_demo', 'FALSE');
 client.config('video:video_channel', 0);
-var altitude;
-client.on('navdata', function(event) {
+client.config('control:altitude_max', 3000);
+
+io.sockets.on('connection', function (socket) {
+  //socket.emit('drone', { hello: 'world' });
+  client.on('navdata', function(event) {
   if(event) {
-    fs.appendFile('log.txt', JSON.stringify(event, undefined, 2));
+    var data = {
+      altitude : event.demo.altitudeMeters,
+      battery: event.demo.batteryPercentage,
+      flying: event.droneState.flying,
+      rotation: event.demo.rotation.leftRight
+    };
+    socket.emit('drone', data);
   }  
-  //console.log("altitudeMeters: " + event.demo.altitudeMeters);
-  altitude = event.demo.altitudeMeters;
 });
+
+});
+
+
+client.takeoff();
+
+var pngStream = client.getPngStream();
+pngStream.on('data', function(data) {
+      fs.writeFile('/static/image.png', data, function(err) {
+        if(!err) console.log("Image saved." + altitude);
+      });
+    });
+
+client.after(5000, function() {
+    this.stop();
+    this.land();
+  });
 
 //require('ar-drone-png-stream')(client, { port: 8000 });
 

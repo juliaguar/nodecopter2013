@@ -1,16 +1,50 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 	<head>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/jquery-1.10.2.min.js"></script>
+		<script src="/jquery.flot.min.js"></script>
 		<script>
-		  var socket = io.connect('http://localhost');
-		  socket.on('drone', function (data) {
-		    console.log(data);
+		  var socket = io.connect('http://localhost:3000');
+		  var altitude = 0;
+		  var altitudes = [];
+		  var count = 0;
+		  var plot;
+		  $(document).ready(function() {
+		  	plot = $.plot($("#placeholder"), [ [[0, -1], [100, 1]] ], {  });
+
+		  window.setInterval(function() {
+		  	plot.setData([altitudes]);
+		  	altitudes.push([++count, altitude]);
+			if(altitudes.length > 100) {
+			    	altitudes = [];
+			    	count = 0;
+			 }
+			    plot.setData([altitudes]);
+			    plot.draw();
+			  }, 100);
+		  });
+
+
+
+		   socket.on('drone', function (data) {
+			    console.log(data);
+			    altitude = data.altitude;
+			   	document.getElementById('altitude').innerText = data.altitude;
+			    document.getElementById('battery').innerText = data.battery;
+			    document.getElementById('flying').innerText = data.flying ? 'Flying right now.' : 'Not flying.';
+
+	
 		  });
 		</script>
 		<title>Drone status</title>
 	</head>
 	<body>
-		<h1>drone status</h1>
+		<h1>drone status - <span id="flying"></span></h1>
+		Altitude: <div id="altitude"></div>
+		Battery: <span id="battery"></span>%
+		<div id="placeholder" style="width:600px;height:300px"></div>
+	
+		<img src='image.png' />
 	</body>
 </html>
