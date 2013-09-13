@@ -1,0 +1,16 @@
+<<!DOCTYPE html>
+<html>
+	<head>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+		<script>
+		  var socket = io.connect('http://localhost');
+		  socket.on('drone', function (data) {
+		    console.log(data);
+		  });
+		</script>
+		<title>Drone status</title>
+	</head>
+	<body>
+		<h1>drone status</h1>
+	</body>
+</html>
