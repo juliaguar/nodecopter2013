@@ -10,31 +10,82 @@
 		  var altitudes = [];
 		  var count = 0;
 		  var plot;
+		  var points = 0.0;
+		  var gameover = false;
 		  $(document).ready(function() {
-		  	plot = $.plot($("#placeholder"), [ [[0, -1], [100, 1]] ], {  });
+		  	plot = $.plot($("#placeholder"), [ [[0, 0], [100, 2]] ], {  });
 
 		  window.setInterval(function() {
+		  	if(!gameover) {
+		  		points += altitude;
+		  		document.getElementById('points').innerText = points;
+		  	}
 		  	plot.setData([altitudes]);
 		  	altitudes.push([++count, altitude]);
 			if(altitudes.length > 100) {
 			    	altitudes = [];
 			    	count = 0;
 			 }
-			    plot.setData([altitudes]);
+			    plot.setData([altitudes, [[0, 2], [100, 2]]]);
 			    plot.draw();
 			  }, 100);
 		  });
 
 
+		  var lastAction = "";
+
+		  $(document).keydown(function(e) {
+		  	if(e.keyCode == 27) {
+		  		action = "land";	
+		  	} else if(e.keyCode == 38) {
+		  		action = "up";	
+		  	} else if (e.keyCode == 40) {
+		  		action = "down";
+		  	}else if (e.keyCode == 37) {
+		  		action = "left";	
+		  	} else if (e.keyCode == 39) {
+		  		action = "right";	
+		  	} else if (e.keyCode == 32) {
+		  		action = "front";	
+		  	} else if (e.keyCode == 84) {
+		  		action = "takeoff";	
+		  	}
+		  	if(action != lastAction) {
+		  		socket.emit('droneController', {"action": action});	
+		  		lastAction = action;
+		  	}
+		  });
+
+		  $(document).keyup(function(e) {
+		  	if(e.keyCode == 38) {
+		  		action = "stop";	  	
+		  	}  else if(e.keyCode == 40) {
+		  		action = "stop";	
+		  	} else if (e.keyCode == 37) {
+		  		action = "stop";	
+		  	} else if (e.keyCode == 39) {
+		  		action = "stop";	
+		  	} else if (e.keyCode == 32) {
+		  		action = "stop";	
+		  	}
+		  	if(action != lastAction) {
+		  		socket.emit('droneController', {"action": action});	
+		  		lastAction = action;
+		  	}
+		  });
+
 
 		   socket.on('drone', function (data) {
 			    console.log(data);
 			    altitude = data.altitude;
+			    if(altitude > 2.0) {
+			    	$('#gameover').show();
+			    	gameover = true;
+			    }
 			   	document.getElementById('altitude').innerText = data.altitude;
+			   	document.getElementById('rotation').innerText = data.rotation;
 			    document.getElementById('battery').innerText = data.battery;
 			    document.getElementById('flying').innerText = data.flying ? 'Flying right now.' : 'Not flying.';
-
-	
 		  });
 		</script>
 		<title>Drone status</title>
@@ -42,9 +93,11 @@
 	<body>
 		<h1>drone status - <span id="flying"></span></h1>
 		Altitude: <div id="altitude"></div>
+		Rotation: <div id="rotation"></div>
 		Battery: <span id="battery"></span>%
 		<div id="placeholder" style="width:600px;height:300px"></div>
 	
-		<img src='image.png' />
+		<h1 style="display:none;" id="gameover">Game over!</h1>
+		Points: <span id="points">0</span>
 	</body>
 </html>

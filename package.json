@@ -1,0 +1,21 @@
+{
+  "name": "Nodecopter Web dashboard",
+  "version": "0.0.1",
+  "description": "Simple dashboard for a ar-drone",
+  "main": "test.js",
+  "dependencies": {
+    "ar-drone": "~0.2.0",
+    "express": "~3.4.0",
+    "socket.io": "~0.9.16"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/juliaguar/nodecopter2013.git"
+  },
+  "author": "Julia, Finn, Björn",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/juliaguar/nodecopter2013/issues"
+  }
+}
